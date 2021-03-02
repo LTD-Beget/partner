@@ -1,0 +1,226 @@
+syntax = "proto3";
+
+package beget.partner.v1.payout;
+
+import "google/api/annotations.proto";
+import "partner/proto/v1/structures.proto";
+
+service PayoutService {
+
+    rpc findPayoutOrders (FindPayoutOrdersRequest) returns (FindPayoutOrdersResponse) {
+        option (google.api.http) = {
+            post: "/v1/partner/payout/search"
+            body: "*"
+        };
+    }
+
+    rpc createPayoutOrder (CreatePayoutOrderRequest) returns (CreatePayoutOrderResponse) {
+        option (google.api.http) = {
+            post: "/v1/partner/payout"
+            body: "*"
+        };
+    }
+
+    rpc getAvailableReferralList (GetAvailableReferralListRequest) returns (GetAvailableReferralListResponse) {
+        option (google.api.http) = {
+            get: "/v1/partner/payout/referral"
+        };
+    }
+
+    rpc getPaymentSystemSettings (GetPaymentSystemSettingsRequest) returns (PaymentSystemSettingsResponse) {
+        option (google.api.http) = {
+            get: "/v1/partner/payout/payment-system/settings"
+        };
+    }
+
+    rpc refreshPaymentSystem (RefreshPaymentSystemRequest) returns (PaymentSystemSettingsResponse) {
+        option (google.api.http) = {
+            post: "/v1/partner/payout/payment-system"
+            body: "*"
+        };
+    }
+
+    rpc removePaymentSystem (RemovePaymentSystemRequest) returns (RemovePaymentSystemResponse) {
+        option (google.api.http) = {
+            delete: "/v1/partner/payout/payment-system"
+        };
+    }
+
+    rpc getAutoPayoutStatus (GetAutoPayoutStatusRequest) returns (GetAutoPayoutStatusResponse) {
+        option (google.api.http) = {
+            get: "/v1/partner/auto-payout/status"
+        };
+    }
+
+    rpc setAutoPayoutStatus (SetAutoPayoutStatusRequest) returns (SetAutoPayoutStatusResponse) {
+        option (google.api.http) = {
+            put: "/v1/partner/auto-payout/status"
+            body: "*"
+        };
+    }
+}
+
+message FindPayoutOrdersRequest {
+    oneof pagination_type {
+        Pagination pagination = 1;
+        Scroll scroll = 2;
+    }
+
+    message Pagination {
+        uint32 page = 1;
+        uint32 page_size = 2;
+    }
+    message Scroll {
+        string page_token = 1;
+        uint32 page_size = 2;
+    }
+}
+
+message FindPayoutOrdersResponse {
+    oneof pagination_type {
+        Pagination pagination = 1;
+        Scroll scroll = 2;
+    }
+
+    message Pagination {
+        uint32 total = 1;
+        uint32 page_count = 2;
+        uint32 page = 3;
+        uint32 page_size = 4;
+    }
+    message Scroll {
+        uint32 page_size = 1;
+        string next_page_token = 2;
+    }
+    repeated structures.PayoutOrder payout_order = 3;
+}
+
+message CreatePayoutOrderRequest {
+    double amount = 1;
+    oneof params {
+        SelfAccount self = 2;
+        ReferralAccount referral = 3;
+        Bank bank = 4;
+        Yandex yandex = 5;
+    }
+
+    message SelfAccount {
+
+    }
+    message ReferralAccount {
+        string identifier = 1;
+    }
+    message Bank {
+
+    }
+    message Yandex {
+
+    }
+}
+
+message CreatePayoutOrderResponse {
+    oneof result {
+        structures.PayoutOrder order = 1;
+        Error error = 2;
+    }
+
+    message Error {
+        Code code = 1;
+        string message = 2;
+
+        enum Code {
+            _ = 0;
+            NOT_ALLOWED = 1; // "Не удалось совершить выплату. Выплаты данного типа запрещены."
+            NOT_ENOUGH_BALANCE = 2; // "Не удалось совершить выплату. Недостаточно средств на балансе."
+            MINIMUM_LIMIT = 3; // "Не удалось совершить выплату. Сумма не должна быть менее установленного лимита для данного типа оплат."
+            NOT_IDENTIFIED = 4; // "Не удалось совершить выплату. Кошелек не идентифицирован."
+            ACCOUNT_CLOSE = 5; // "Не удалось совершить выплату. Счет закрыт."
+            ACCOUNT_BLOCKED = 6; // "Не удалось совершить выплату. Счет в ПС заблокирован. Данная операция для счета запрещена."
+            UNKNOWN_ACCOUNT = 7; // "Не удалось совершить выплату. Счета с таким идентификатором не существует."
+            MAX_LIMIT_REACHED = 8; // "Не удалось совершить выплату. Превышено ограничение на единовременно зачисляемую сумму."
+            MAX_LIMIT_BY_PERIOD_REACHED = 9; // "Не удалось совершить выплату. Превышено ограничение на максимальную сумму зачислений за период времени."
+            PROCESSING = 10; // "Не удалось совершить выплату. Ошибка запроса зачисления перевода."
+            ACCOUNT_LIMIT_REACHED = 11; // "Не удалось совершить выплату. Превышен лимит остатка на счете получателя."
+        }
+    }
+}
+
+message GetAvailableReferralListRequest {
+
+}
+
+message GetAvailableReferralListResponse {
+    repeated Referral referral = 1;
+
+    message Referral {
+        string login = 1;
+    }
+}
+
+message GetPaymentSystemSettingsRequest {
+
+}
+
+message PaymentSystemSettingsResponse {
+    Yandex yandex = 1;
+    Bank bank = 2;
+
+    message Yandex {
+        double min_amount = 1;
+        string auth_url = 2;
+        Wallet wallet = 3;
+
+        message Wallet {
+            string account = 1;
+            bool identified = 2;
+            Status status = 3;
+            Type type = 4;
+
+            enum Status {
+                ANONYMOUS = 0;
+                NAMED = 1;
+                IDENTIFIED = 2;
+            }
+            enum Type {
+                PERSONAL = 0;
+                PROFESSIONAL = 1;
+            }
+        }
+    }
+
+    message Bank {
+        double min_amount = 1;
+    }
+}
+
+message RefreshPaymentSystemRequest {
+
+}
+
+message RemovePaymentSystemRequest {
+    Name name = 1;
+
+    enum Name {
+        YANDEX = 0;
+    }
+}
+
+message RemovePaymentSystemResponse {
+
+}
+
+message GetAutoPayoutStatusRequest {
+
+}
+
+message GetAutoPayoutStatusResponse {
+    bool active = 1;
+}
+
+message SetAutoPayoutStatusRequest {
+    bool active = 1;
+}
+
+message SetAutoPayoutStatusResponse {
+
+}

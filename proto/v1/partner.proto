@@ -1,0 +1,358 @@
+syntax = "proto3";
+
+package beget.partner.v1.partner;
+
+import "google/api/annotations.proto";
+import "partner/proto/v1/structures.proto";
+
+service PartnerService {
+
+    rpc getInfo (GetInfoRequest) returns (GetInfoResponse) {
+        option (google.api.http) = {
+            get: "/v1/partner/summary"
+        };
+    }
+
+    rpc getContract (GetContractRequest) returns (GetContractResponse) {
+        option (google.api.http) = {
+            get: "/v1/partner/contract"
+        };
+    }
+
+    rpc findTransactions (FindTransactionsRequest) returns (FindTransactionsResponse) {
+        option (google.api.http) = {
+            post: "/v1/partner/transaction/search"
+            body: "*"
+        };
+    }
+
+    rpc getReferralList (GetReferralListRequest) returns (GetReferralListResponse) {
+        option (google.api.http) = {
+            get: "/v1/partner/referral"
+        };
+    }
+
+    rpc getTrafficChart (GetTrafficChartRequest) returns (GetTrafficChartResponse) {
+        option (google.api.http) = {
+            get: "/v1/partner/chart/traffic"
+        };
+    }
+
+    rpc getMoneyChart (GetMoneyChartRequest) returns (GetMoneyChartResponse) {
+        option (google.api.http) = {
+            get: "/v1/partner/chart/money"
+        };
+    }
+
+    rpc getTrafficDetails (GetTrafficDetailsRequest) returns (GetTrafficDetailsResponse) {
+        option (google.api.http) = {
+            get: "/v1/partner/traffic"
+        };
+    }
+
+    rpc getSiteList (GetSiteListRequest) returns (GetSiteListResponse) {
+        option (google.api.http) = {
+            get: "/v1/partner/site"
+        };
+    }
+
+    rpc checkSite (CheckSiteRequest) returns (CheckSiteResponse) {
+        option (google.api.http) = {
+            post: "/v1/partner/site/status"
+            body: "*"
+        };
+    }
+
+    rpc addSite (AddSiteRequest) returns (AddSiteResponse) {
+        option (google.api.http) = {
+            post: "/v1/partner/site"
+            body: "*"
+        };
+    }
+
+    rpc removeSite (RemoveSiteRequest) returns (RemoveSiteResponse) {
+        option (google.api.http) = {
+            delete: "/v1/partner/site/{site_id}"
+        };
+    }
+
+    rpc getRate (GetRateRequest) returns (GetRateResponse) {
+        option (google.api.http) = {
+            get: "/v1/partner/rate"
+        };
+    }
+}
+
+
+message GetInfoRequest {
+
+}
+
+message GetInfoResponse {
+    double partner_balance = 1;
+    double sum_payouts = 2;
+    uint32 referral_count = 3;
+    uint32 referral_count_active = 4;
+}
+
+message GetContractRequest {
+
+}
+
+message GetContractResponse {
+    string url = 1;
+    structures.ContractStatus status = 2;
+}
+
+message FindTransactionsRequest {
+    SearchScope scope = 1;
+    oneof pagination_type {
+        Pagination pagination = 2;
+        Scroll scroll = 3;
+    }
+
+    message SearchScope {
+        OnlyBalanceRelated only_balance_related = 1; // Использовать фильтр по транзакциям, влияющих на баланс
+        ByReferral by_referral = 2;
+        Aggregation aggregation = 3; // Общий запрос транзакций по умолчанию не должен группировать, вынесено в фильтр
+
+        message OnlyBalanceRelated {
+
+        }
+        message ByReferral {
+            string identifier = 1; // id or login
+        }
+        message Aggregation {
+            repeated structures.Transaction.Operation operation = 1;
+        }
+    }
+
+    message Pagination {
+        uint32 page = 1;
+        uint32 page_size = 2;
+    }
+    message Scroll {
+        string page_token = 1;
+        uint32 page_size = 2;
+    }
+}
+
+message FindTransactionsResponse {
+    oneof pagination_type {
+        Pagination pagination = 1;
+        Scroll scroll = 2;
+    }
+
+    message Pagination {
+        uint32 total = 1;
+        uint32 page_count = 2;
+        uint32 page = 3;
+        uint32 page_size = 4;
+    }
+    message Scroll {
+        uint32 page_size = 1;
+        string next_page_token = 2;
+    }
+    repeated structures.Transaction transaction = 3;
+}
+
+message GetReferralListRequest {
+
+}
+
+message GetReferralListResponse {
+    repeated Referral referral = 1;
+
+    message Referral {
+        uint32 id = 1;
+        string login = 2;
+        bool blocked = 3;
+        double payments = 4;
+        uint32 percent = 5;
+        double profit = 6;
+        string registered_at = 7; // Дата в формате W3C
+    }
+}
+
+message GetTrafficChartRequest {
+    DateInterval date_interval = 1;
+}
+
+message GetTrafficChartResponse {
+    oneof result {
+        Success success = 1;
+        Error error = 2;
+    }
+
+    message Success {
+        DateInterval date_interval = 1;
+        repeated ChartPoint hit = 2;
+        repeated ChartPoint registration = 3;
+    }
+    message Error {
+        Code code = 1;
+        string message = 2;
+
+        enum Code {
+            _ = 0;
+            INVALID_DATE_INTERVAL = 1; // Неправильный формат даты или отсутствие
+        }
+    }
+}
+
+message GetMoneyChartRequest {
+    DateInterval date_interval = 1;
+}
+
+message GetMoneyChartResponse {
+    oneof result {
+        Success success = 1;
+        Error error = 2;
+    }
+
+    message Success {
+        DateInterval date_interval = 1;
+        repeated ChartPoint new_referral = 2;
+        repeated ChartPoint old_referral = 3;
+        repeated ChartPoint total = 4;
+    }
+    message Error {
+        Code code = 1;
+        string message = 2;
+
+        enum Code {
+            _ = 0;
+            INVALID_DATE_INTERVAL = 1; // Неправильный формат даты или отсутствие
+        }
+    }
+
+}
+
+message DateInterval {
+    string date_from = 1; // YYYY-MM-DD
+    string date_to = 2; // YYYY-MM-DD
+}
+
+message ChartPoint {
+    double value = 1;
+    string date = 2; // YYYY-MM-DD
+}
+
+message GetTrafficDetailsRequest {
+    DateInterval date_interval = 1;
+    bool from_link = 2;
+    bool from_site = 3;
+}
+
+message GetTrafficDetailsResponse {
+    oneof result {
+        Success success = 1;
+        Error error = 2;
+    }
+
+    message Success {
+        DateInterval date_interval = 1;
+        repeated Source source = 2;
+    }
+    message Error {
+        Code code = 1;
+        string message = 2;
+
+        enum Code {
+            _ = 0;
+            INVALID_DATE_INTERVAL = 1; // Неправильный формат даты или отсутствие
+        }
+    }
+
+    message Source {
+        uint32 registrations = 1;
+        uint32 hits = 2;
+        string hostname = 3;
+        double profit = 4;
+        repeated Page page = 5;
+
+        message Page {
+            uint32 registrations = 1;
+            uint32 hits = 2;
+            string page = 3;
+            double profit = 4;
+        }
+    }
+}
+
+message GetSiteListRequest {
+
+}
+
+message GetSiteListResponse {
+    repeated structures.Site site = 1;
+}
+
+message CheckSiteRequest {
+    uint32 site_id = 1;
+}
+
+message CheckSiteResponse {
+    oneof result {
+        Success success = 1;
+        Error error = 2;
+    }
+
+    message Success {
+
+    }
+    message Error {
+        Code code = 1;
+        string message = 2;
+
+        enum Code {
+            _ = 0;
+            UNAVAILABLE_SITE = 1; // Не можем получить доступ к этому сайту
+            UNAVAILABLE_FILE = 2; // Контрольный файл не найден на сайте
+            WRONG_FILE_FORMAT = 3; // Не удается загрузить контрольный файл с сайта
+            UNEXPECTED_SITE_RESPONSE = 4; // При запросе к сайту произошла неизвестная ошибка
+        }
+    }
+}
+
+message AddSiteRequest {
+    string hostname = 1;
+}
+
+message AddSiteResponse {
+    oneof result {
+        structures.Site site = 1;
+        Error error = 2;
+    }
+
+    message Error {
+        Code code = 1;
+        string message = 2;
+
+        enum Code {
+            _ = 0;
+            SITE_ALREADY_EXISTS = 1; // Сайт уже существует на данном аккаунте
+            SITE_CANNOT_BE_ADDED = 2; // Данный сайт не может быть добавлен в партнерскую систему или уже добавлен
+            WRONG_HOSTNAME_FORMAT = 3; // Неправильный формат адреса сайта
+        }
+    }
+}
+
+message RemoveSiteRequest {
+    uint32 site_id = 1;
+}
+
+message RemoveSiteResponse {
+
+}
+
+message GetRateRequest {
+
+}
+
+message GetRateResponse {
+    double virtual_percent = 1;
+    double vip_percent = 2;
+    double vps_percent = 3;
+    double bitrix_percent = 4;
+}

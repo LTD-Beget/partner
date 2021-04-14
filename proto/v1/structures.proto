@@ -14,6 +14,7 @@ message PayoutOrder {
     Status status = 3;
     Type type = 4;
     Data data = 5;
+    string created_at = 6; // Дата в формате W3C
 
     enum Status {
         PROCESSING = 0;

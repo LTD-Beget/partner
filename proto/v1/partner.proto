@@ -179,25 +179,9 @@ message GetTrafficChartRequest {
 }
 
 message GetTrafficChartResponse {
-    oneof result {
-        Success success = 1;
-        Error error = 2;
-    }
-
-    message Success {
-        DateInterval date_interval = 1;
-        repeated ChartPoint hit = 2;
-        repeated ChartPoint registration = 3;
-    }
-    message Error {
-        Code code = 1;
-        string message = 2;
-
-        enum Code {
-            _ = 0;
-            INVALID_DATE_INTERVAL = 1; // Неправильный формат даты или отсутствие
-        }
-    }
+    DateInterval date_interval = 1;
+    repeated ChartPoint hit = 2;
+    repeated ChartPoint registration = 3;
 }
 
 message GetMoneyChartRequest {
@@ -205,27 +189,10 @@ message GetMoneyChartRequest {
 }
 
 message GetMoneyChartResponse {
-    oneof result {
-        Success success = 1;
-        Error error = 2;
-    }
-
-    message Success {
-        DateInterval date_interval = 1;
-        repeated ChartPoint new_referral = 2;
-        repeated ChartPoint old_referral = 3;
-        repeated ChartPoint total = 4;
-    }
-    message Error {
-        Code code = 1;
-        string message = 2;
-
-        enum Code {
-            _ = 0;
-            INVALID_DATE_INTERVAL = 1; // Неправильный формат даты или отсутствие
-        }
-    }
-
+    DateInterval date_interval = 1;
+    repeated ChartPoint new_referral = 2;
+    repeated ChartPoint old_referral = 3;
+    repeated ChartPoint total = 4;
 }
 
 message DateInterval {
@@ -245,24 +212,8 @@ message GetTrafficDetailsRequest {
 }
 
 message GetTrafficDetailsResponse {
-    oneof result {
-        Success success = 1;
-        Error error = 2;
-    }
-
-    message Success {
-        DateInterval date_interval = 1;
-        repeated Source source = 2;
-    }
-    message Error {
-        Code code = 1;
-        string message = 2;
-
-        enum Code {
-            _ = 0;
-            INVALID_DATE_INTERVAL = 1; // Неправильный формат даты или отсутствие
-        }
-    }
+    DateInterval date_interval = 1;
+    repeated Source source = 2;
 
     message Source {
         uint32 registrations = 1;

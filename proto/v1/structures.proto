@@ -1,0 +1,90 @@
+syntax = 'proto3';
+
+package beget.partner.v1.structures;
+
+enum ContractStatus {
+    NOT_SIGNED = 0;
+    SIGNED_WITH_BANK_DETAILS = 1;
+    SIGNED_WITHOUT_BANK_DETAILS = 2;
+}
+
+message PayoutOrder {
+    uint32 id = 1;
+    double amount = 2;
+    Status status = 3;
+    Type type = 4;
+    Data data = 5;
+    string created_at = 6; // Дата в формате W3C
+
+    enum Status {
+        PROCESSING = 0;
+        DONE = 1;
+        CANCELLED = 2;
+    }
+    enum Type {
+        WEBMONEY = 0;
+        SELF = 1;
+        REFERRAL = 2;
+        BANK = 3;
+        YANDEX = 4;
+    }
+    message Data {
+        oneof params {
+            SelfAccount self = 1;
+            ReferralAccount referral = 2;
+            Yandex yandex = 3;
+            Webmoney webmoney = 4;
+        }
+
+        message SelfAccount {
+            bool auto_payment = 1;
+        }
+        message ReferralAccount {
+            string login = 1;
+        }
+        message Yandex {
+            string wallet_id = 1;
+        }
+        message Webmoney {
+            string wallet_id = 1;
+        }
+    }
+}
+
+message Transaction {
+    uint32 id = 1;
+    string transaction_id = 2;
+    string referral_login = 3;
+    double amount = 4;
+    uint32 percent = 5;
+    double profit = 6;
+    string created_at = 7; // Дата в формате W3C
+    Operation operation = 8;
+    Type type = 9;
+
+    enum Operation {
+        HOSTING = 0;
+        BONUS = 1;
+        DOMAIN = 2;
+        OTHER = 3;
+        BLOCKED = 4;
+        BY_HAND = 5;
+        VOIP = 6;
+        PARKING = 7;
+        VPS = 8;
+    }
+    enum Type {
+        ADD = 0;
+        DEL = 1;
+        HOLD = 2;
+        BUFFER = 3;
+    }
+}
+
+message Site {
+    uint32 id = 1;
+    string hostname = 2;
+    bool validated = 3;
+    string added_at = 4; // Дата в формате W3C
+    string hash = 5;
+}

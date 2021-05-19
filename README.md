@@ -1,1 +1,2 @@
-# partner
+# Partner
+Public Partner API

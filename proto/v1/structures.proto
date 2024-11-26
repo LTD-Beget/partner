@@ -72,6 +72,7 @@ message Transaction {
         VOIP = 6;
         PARKING = 7;
         VPS = 8;
+        CLOUD = 9;
     }
     enum Type {
         ADD = 0;
